@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RVU Productivity Worksheet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #f8f7f4;
+    --surface:   #ffffff;
+    --border:    rgba(0,0,0,0.10);
+    --border-md: rgba(0,0,0,0.18);
+    --text:      #1a1a18;
+    --muted:     #6b6b66;
+    --hint:      #9b9b95;
+    --blue:      #185FA5;
+    --blue-lt:   #E6F1FB;
+    --blue-md:   #B5D4F4;
+    --green:     #0F6E56;
+    --green-lt:  #E1F5EE;
+    --green-md:  #9FE1CB;
+    --amber:     #BA7517;
+    --amber-lt:  #FAEEDA;
+    --red:       #A32D2D;
+    --red-lt:    #FCEBEB;
+    --radius:    10px;
+    --radius-sm: 6px;
+    --shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #1c1c1a;
+      --surface:   #242422;
+      --border:    rgba(255,255,255,0.10);
+      --border-md: rgba(255,255,255,0.18);
+      --text:      #f0efe8;
+      --muted:     #a0a09a;
+      --hint:      #6b6b66;
+      --blue:      #85B7EB;
+      --blue-lt:   #0c2a44;
+      --blue-md:   #185FA5;
+      --green:     #5DCAA5;
+      --green-lt:  #043428;
+      --green-md:  #0F6E56;
+      --amber:     #EF9F27;
+      --amber-lt:  #3a2200;
+      --red:       #F09595;
+      --red-lt:    #3a1010;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* ── Layout ── */
+  .app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .app-header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 28px; height: 28px; background: var(--blue); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+  .main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .section-title { font-size: 14px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .section-title svg { opacity: 0.7; }
+
+  /* ── Forms ── */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  input[type=text], input[type=number], input[type=date], input[type=password], select, textarea {
+    width: 100%; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm); background: var(--bg); color: var(--text);
+    font-family: inherit; transition: border-color 0.15s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-family: inherit; font-weight: 500; padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: var(--surface); color: var(--text); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { background: var(--bg); border-color: var(--blue); color: var(--blue); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-primary:hover { background: #0C447C; border-color: #0C447C; color: #fff; }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: var(--bg); border-color: var(--border); color: var(--text); }
+  .btn-danger { color: var(--red); border-color: transparent; background: transparent; }
+  .btn-danger:hover { background: var(--red-lt); border-color: var(--red); }
+  .btn-sm { font-size: 12px; padding: 5px 10px; }
+  .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ── Metrics ── */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .metrics-grid { grid-template-columns: repeat(2,1fr); } }
+  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: 1rem; }
+  .metric-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--hint); margin-bottom: 4px; }
+  .metric-value { font-size: 24px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .metric-value.blue { color: var(--blue); }
+  .metric-value.green { color: var(--green); }
+
+  /* ── Weight rows ── */
+  .weight-row { display: grid; grid-template-columns: 180px 120px 1fr 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .weight-header { display: grid; grid-template-columns: 180px 120px 1fr 36px; gap: 8px; margin-bottom: 6px; }
+  @media (max-width: 650px) { .weight-row, .weight-header { grid-template-columns: 1fr 80px 36px; } .weight-row .notes-field { display: none; } .weight-header span:nth-child(3) { display: none; } }
+
+  /* ── Log rows ── */
+  .log-row { display: grid; grid-template-columns: 140px 1fr 80px 1fr 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .log-header { display: grid; grid-template-columns: 140px 1fr 80px 1fr 36px; gap: 8px; margin-bottom: 6px; }
+  @media (max-width: 700px) { .log-row, .log-header { grid-template-columns: 120px 1fr 70px 36px; } .log-row .notes-cell { display: none; } .log-header span:nth-child(4) { display: none; } }
+
+  /* ── Summary table ── */
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .summary-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--hint); padding: 0 8px 8px 0; border-bottom: 1px solid var(--border); }
+  .summary-table td { padding: 9px 8px 9px 0; border-bottom: 1px solid var(--border); color: var(--text); }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+  .badge-ok { background: var(--green-lt); color: var(--green); }
+  .badge-warn { background: var(--amber-lt); color: var(--amber); }
+  .badge-pending { background: var(--bg); color: var(--hint); border: 1px solid var(--border); }
+
+  /* ── Alerts ── */
+  .alert { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 8px; }
+  .alert-warn { background: var(--amber-lt); color: var(--amber); border: 1px solid rgba(186,117,23,0.2); }
+  .alert-info { background: var(--blue-lt); color: var(--blue); border: 1px solid rgba(24,95,165,0.2); }
+  .alert-success { background: var(--green-lt); color: var(--green); border: 1px solid rgba(15,110,86,0.2); }
+
+  /* ── Chart tabs ── */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 1rem; }
+  .tab { font-size: 13px; padding: 5px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* ── Snapshots ── */
+  .snap-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .875rem 1rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; transition: all 0.15s; }
+  .snap-card:hover { border-color: var(--blue); }
+  .snap-card.selected { border: 2px solid var(--blue); background: var(--blue-lt); }
+  .snap-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .snap-meta { font-size: 12px; color: var(--muted); }
+
+  /* ── Connection screen ── */
+  #connect-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+  .connect-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: var(--shadow); }
+  .connect-card h2 { font-size: 20px; font-weight: 600; margin-bottom: .5rem; letter-spacing: -0.01em; }
+  .connect-card p { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+  .connect-steps { background: var(--bg); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+  .connect-steps ol { padding-left: 1.25rem; font-size: 13px; color: var(--muted); line-height: 2; }
+  .connect-steps a { color: var(--blue); }
+  .privacy-note { font-size: 12px; color: var(--hint); margin-top: 1rem; display: flex; align-items: flex-start; gap: 6px; }
+
+  /* ── Sync status ── */
+  .sync-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .sync-ok { background: var(--green-lt); color: var(--green); }
+  .sync-err { background: var(--red-lt); color: var(--red); }
+  .sync-busy { background: var(--amber-lt); color: var(--amber); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  /* ── Col header label ── */
+  .col-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--hint); }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 2rem; color: var(--hint); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     CONNECTION SCREEN
+════════════════════════════════════════ -->
+<div id="connect-screen" style="display:none">
+  <div class="connect-card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+      <div class="logo-mark">R</div>
+      <div>
+        <h2>Connect your data</h2>
+        <p style="margin:0;font-size:13px;color:var(--muted)">RVU Productivity Worksheet</p>
+      </div>
+    </div>
+    <p>Enter your Google Sheet ID and API key to connect. These are stored only on this device and never sent anywhere except Google's servers.</p>
+
+    <div class="connect-steps">
+      <ol>
+        <li>Follow the setup guide in the <strong>README</strong> to create your Google Sheet and API key</li>
+        <li>Copy your <strong>Sheet ID</strong> from the Sheet URL</li>
+        <li>Paste both values below and click Connect</li>
+      </ol>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem">
+      <div class="field">
+        <label>Google Sheet ID</label>
+        <input type="text" id="cfg-sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Google API Key</label>
+        <input type="password" id="cfg-api-key" placeholder="AIzaSy..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Sheet name (tab name in your Google Sheet)</label>
+        <input type="text" id="cfg-sheet-name" placeholder="RVU Worksheet" value="RVU Worksheet">
+      </div>
+    </div>
+
+    <div id="connect-error" style="display:none" class="alert alert-warn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span id="connect-error-msg">Unable to connect. Check your Sheet ID and API key.</span>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="connectSheet()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      Connect to Google Sheet
+    </button>
+
+    <p class="privacy-note">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Your API key and Sheet ID are saved only in this browser's local storage. They are never uploaded to GitHub or any third-party server.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════ -->
+<div id="app-screen" style="display:none">
+
+  <header class="app-header">
+    <h1>
+      <div class="logo-mark">R</div>
+      RVU Productivity Worksheet
+    </h1>
+    <div class="header-actions">
+      <span id="sync-status" class="sync-pill sync-ok"><span class="dot"></span>Synced</span>
+      <button class="btn btn-sm btn-ghost" onclick="disconnectSheet()" title="Disconnect this device">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Disconnect
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ── 1. Provider setup ── -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Provider setup
+        </span>
+      </div>
+      <div class="grid3">
+        <div class="field">
+          <label>Provider name</label>
+          <input type="text" id="prov-name" placeholder="Dr. Smith" oninput="autoSaveProvider()">
+        </div>
+        <div class="field">
+          <label>Period start</label>
+          <input type="date" id="period-start" oninput="autoSaveProvider();calcReport()">
+        </div>
+        <div class="field">
+          <label>Period mode</label>
+          <select id="period-mode" onchange="autoSaveProvider();calcReport()">
+            <option value="6month">6-month rolling</option>
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. RVU weight config ── -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          RVU weight config
+        </span>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-danger" onclick="resetWeights()">Reset weights</button>
+        </div>
+      </div>
+      <div class="weight-header">
+        <span class="col-label">Visit type</span>
+        <span class="col-label">RVU weight</span>
+        <span class="col-label">Notes</span>
+        <span></span>
+      </div>
+      <div id="weight-rows"></div>
+      <button class="btn btn-sm btn-ghost" style="margin-top:4px" onclick="addWeightRow()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add visit type
+      </button>
+    </div>
+
+    <!-- ── 3. Compensation config ── -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Compensation config
+        </span>
+        <button class="btn btn-sm btn-danger" onclick="resetComp()">Reset comp</button>
+      </div>
+      <div class="grid3">
+        <div class="field">
+          <label>Annual base pay ($)</label>
+          <input type="number" id="base-pay" placeholder="e.g. 165000" oninput="saveComp();calcReport()">
+        </div>
+        <div class="field">
+          <label>Conversion factor ($/RVU)</label>
+          <input type="number" id="conv-factor" placeholder="e.g. 52.00" step="0.01" oninput="saveComp();calcReport()">
+        </div>
+        <div class="field">
+          <label>RVU threshold (before bonus)</label>
+          <input type="number" id="rvu-thresh" placeholder="e.g. 4500" oninput="saveComp();calcReport()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. Activity log ── -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Activity log
+        </span>
+        <button class="btn btn-sm btn-danger" onclick="clearLog()">Clear log</button>
+      </div>
+      <div class="log-header">
+        <span class="col-label">Date</span>
+        <span class="col-label">Visit type</span>
+        <span class="col-label">Count</span>
+        <span class="col-label notes-cell">Notes</span>
+        <span></span>
+      </div>
+      <div id="log-rows"></div>
+      <button class="btn btn-sm btn-ghost" style="margin-top:4px" onclick="addLogRow()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add entry
+      </button>
+    </div>
+
+    <!-- ── 5. Report ── -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Report
+        </span>
+        <div class="btn-group">
+          <button class="btn btn-sm" onclick="exportCSV()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="saveSnapshot()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save snapshot
+          </button>
+        </div>
+      </div>
+
+      <div id="warnings-block" style="margin-bottom:0"></div>
+
+      <div class="metrics-grid">
+        <div class="metric"><div class="metric-label">Entries logged</div><div class="metric-value" id="m-entries">—</div></div>
+        <div class="metric"><div class="metric-label">Total RVUs</div><div class="metric-value blue" id="m-rvus">—</div></div>
+        <div class="metric"><div class="metric-label">Base pay (period)</div><div class="metric-value" id="m-base">—</div></div>
+        <div class="metric"><div class="metric-label">Estimated total comp</div><div class="metric-value green" id="m-total">—</div></div>
+      </div>
+
+      <table class="summary-table" style="margin-bottom:1.5rem">
+        <thead>
+          <tr>
+            <th>Visit type</th>
+            <th>Count</th>
+            <th>RVU weight</th>
+            <th>Total RVUs</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="summary-tbody"></tbody>
+      </table>
+
+      <div class="tab-bar">
+        <button class="tab active" id="tab-grouped" onclick="switchChart('grouped')">Grouped</button>
+        <button class="tab" id="tab-stacked" onclick="switchChart('stacked')">Stacked</button>
+      </div>
+
+      <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:10px;height:10px;border-radius:2px;background:#B5D4F4;display:inline-block"></span>Base pay</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;display:inline-block"></span>RVU bonus</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:10px;height:10px;border-radius:2px;background:#185FA5;display:inline-block"></span>Total comp</span>
+      </div>
+      <div style="position:relative;width:100%;height:280px">
+        <canvas id="compChart" role="img" aria-label="Compensation breakdown: base pay, RVU bonus, and total comp">Compensation breakdown chart.</canvas>
+      </div>
+    </div>
+
+    <!-- ── 6. Comparison view ── -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Comparison view
+        </span>
+        <button class="btn btn-sm" onclick="exportComparison()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export comparison
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Select 2 or more saved snapshots to compare side by side.</p>
+      <div id="snapshots-list"></div>
+      <div style="position:relative;width:100%;height:300px;margin-top:1rem">
+        <canvas id="cmpChart" role="img" aria-label="Snapshot comparison chart">Snapshot comparison.</canvas>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG & STATE
+══════════════════════════════════════════ */
+const LS_CREDS = 'rvu_creds_v1';
+let SHEET_ID = '';
+let API_KEY  = '';
+let TAB_NAME = 'RVU Worksheet';
+
+// Tab names inside the Google Sheet
+const TABS = {
+  weights: 'weights',
+  log:     'activity_log',
+  comp:    'comp_config',
+  snaps:   'snapshots',
+  meta:    'provider_meta'
+};
+
+const defaultWeights = [
+  { type:'New patient',  weight:'', notes:'e.g. 99205' },
+  { type:'Post-op',      weight:'', notes:'Global period — may be 0' },
+  { type:'Pre-op',       weight:'', notes:'Complexity dependent' },
+  { type:'RN visit',     weight:'', notes:'e.g. 99211 ~0.18' },
+  { type:'OR day',       weight:'', notes:'Flat daily RVU — TBD' },
+  { type:'Image review', weight:'', notes:'Modality dependent' },
+];
+
+let weights    = defaultWeights.map(w => ({...w}));
+let logEntries = [];
+let snapshots  = [];
+let compChart  = null;
+let cmpChart   = null;
+let chartMode  = 'grouped';
+let saveTimer  = null;
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  const creds = JSON.parse(localStorage.getItem(LS_CREDS) || 'null');
+  if (creds && creds.sheetId && creds.apiKey) {
+    SHEET_ID = creds.sheetId;
+    API_KEY  = creds.apiKey;
+    TAB_NAME = creds.tabName || 'RVU Worksheet';
+    showApp();
+    loadAllFromSheet();
+  } else {
+    showConnect();
+  }
+});
+
+function showConnect() {
+  document.getElementById('connect-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('connect-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+}
+
+/* ══════════════════════════════════════════
+   GOOGLE SHEETS API HELPERS
+══════════════════════════════════════════ */
+// Encodes sheet tab + range for API URL
+function sheetRange(tab, range) {
+  return encodeURIComponent(`${tab}!${range}`);
+}
+
+async function sheetsGet(tab, range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetRange(tab, range)}?key=${API_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Sheets GET failed: ${r.status}`);
+  return r.json();
+}
+
+async function sheetsUpdate(tab, range, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetRange(tab, range)}?valueInputOption=RAW&key=${API_KEY}`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ range: `${tab}!${range}`, majorDimension: 'ROWS', values })
+  });
+  if (!r.ok) throw new Error(`Sheets PUT failed: ${r.status}`);
+  return r.json();
+}
+
+async function sheetsClear(tab, range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetRange(tab, range)}:clear?key=${API_KEY}`;
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+  if (!r.ok) throw new Error(`Sheets CLEAR failed: ${r.status}`);
+  return r.json();
+}
+
+/* ══════════════════════════════════════════
+   SYNC STATUS UI
+══════════════════════════════════════════ */
+function setSyncing() {
+  const el = document.getElementById('sync-status');
+  el.className = 'sync-pill sync-busy';
+  el.innerHTML = '<span class="dot"></span>Saving…';
+}
+function setSynced() {
+  const el = document.getElementById('sync-status');
+  el.className = 'sync-pill sync-ok';
+  el.innerHTML = '<span class="dot"></span>Synced';
+}
+function setSyncError(msg) {
+  const el = document.getElementById('sync-status');
+  el.className = 'sync-pill sync-err';
+  el.innerHTML = `<span class="dot"></span>${msg || 'Sync error'}`;
+}
+
+/* ══════════════════════════════════════════
+   CONNECTION
+══════════════════════════════════════════ */
+async function connectSheet() {
+  const sheetId  = document.getElementById('cfg-sheet-id').value.trim();
+  const apiKey   = document.getElementById('cfg-api-key').value.trim();
+  const tabName  = document.getElementById('cfg-sheet-name').value.trim() || 'RVU Worksheet';
+  const errEl    = document.getElementById('connect-error');
+  const errMsg   = document.getElementById('connect-error-msg');
+
+  if (!sheetId || !apiKey) {
+    errMsg.textContent = 'Both Sheet ID and API key are required.';
+    errEl.style.display = 'flex'; return;
+  }
+
+  // Test connection by reading weights tab
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(TABS.weights + '!A1')}?key=${apiKey}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    SHEET_ID = sheetId; API_KEY = apiKey; TAB_NAME = tabName;
+    localStorage.setItem(LS_CREDS, JSON.stringify({ sheetId, apiKey, tabName }));
+    errEl.style.display = 'none';
+    showApp();
+    await loadAllFromSheet();
+  } catch (e) {
+    errMsg.textContent = `Could not connect (${e.message}). Check your Sheet ID, API key, and that the Sheets API is enabled.`;
+    errEl.style.display = 'flex';
+  }
+}
+
+function disconnectSheet() {
+  if (!confirm('Disconnect this device? Your data stays in Google Sheets. You can reconnect anytime.')) return;
+  localStorage.removeItem(LS_CREDS);
+  SHEET_ID = ''; API_KEY = '';
+  weights = defaultWeights.map(w => ({...w}));
+  logEntries = []; snapshots = [];
+  showConnect();
+}
+
+/* ══════════════════════════════════════════
+   LOAD ALL DATA FROM SHEET
+══════════════════════════════════════════ */
+async function loadAllFromSheet() {
+  try {
+    setSyncing();
+    await Promise.all([loadWeights(), loadComp(), loadLog(), loadSnapshots(), loadMeta()]);
+    renderWeightRows();
+    renderLog();
+    renderSnapshots();
+    calcReport();
+    setSynced();
+  } catch(e) {
+    setSyncError('Load failed');
+    console.error(e);
+  }
+}
+
+async function loadWeights() {
+  try {
+    const d = await sheetsGet(TABS.weights, 'A2:C50');
+    const rows = d.values || [];
+    if (rows.length) {
+      weights = rows.filter(r => r[0]).map(r => ({
+        type:   r[0] || '',
+        weight: r[1] || '',
+        notes:  r[2] || ''
+      }));
+    }
+  } catch(e) { /* tab may not exist yet, use defaults */ }
+}
+
+async function loadComp() {
+  try {
+    const d = await sheetsGet(TABS.comp, 'A2:B10');
+    const rows = d.values || [];
+    const map = {};
+    rows.forEach(r => { if(r[0]) map[r[0]] = r[1] || ''; });
+    if (map.base_pay)    document.getElementById('base-pay').value    = map.base_pay;
+    if (map.conv_factor) document.getElementById('conv-factor').value = map.conv_factor;
+    if (map.rvu_thresh)  document.getElementById('rvu-thresh').value  = map.rvu_thresh;
+  } catch(e) {}
+}
+
+async function loadLog() {
+  try {
+    const d = await sheetsGet(TABS.log, 'A2:E500');
+    const rows = d.values || [];
+    logEntries = rows.filter(r => r[0]).map(r => ({
+      id:    r[0] || '',
+      date:  r[1] || '',
+      type:  r[2] || '',
+      count: r[3] || '',
+      notes: r[4] || ''
+    }));
+  } catch(e) {}
+}
+
+async function loadSnapshots() {
+  try {
+    const d = await sheetsGet(TABS.snaps, 'A2:G100');
+    const rows = d.values || [];
+    snapshots = rows.filter(r => r[0]).map(r => ({
+      id:       r[0] || '',
+      label:    r[1] || '',
+      base:     parseFloat(r[2]) || 0,
+      bonus:    parseFloat(r[3]) || 0,
+      total:    parseFloat(r[4]) || 0,
+      rvus:     parseFloat(r[5]) || 0,
+      selected: false
+    }));
+  } catch(e) {}
+}
+
+async function loadMeta() {
+  try {
+    const d = await sheetsGet(TABS.meta, 'A2:B10');
+    const rows = d.values || [];
+    const map = {};
+    rows.forEach(r => { if(r[0]) map[r[0]] = r[1] || ''; });
+    if (map.provider_name)  document.getElementById('prov-name').value     = map.provider_name;
+    if (map.period_start)   document.getElementById('period-start').value  = map.period_start;
+    if (map.period_mode)    document.getElementById('period-mode').value   = map.period_mode;
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════
+   DEBOUNCED SAVE
+══════════════════════════════════════════ */
+function scheduleSave(fn) {
+  setSyncing();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try { await fn(); setSynced(); }
+    catch(e) { setSyncError('Save failed'); console.error(e); }
+  }, 800);
+}
+
+/* ══════════════════════════════════════════
+   WEIGHTS
+══════════════════════════════════════════ */
+function renderWeightRows() {
+  const c = document.getElementById('weight-rows');
+  c.innerHTML = '';
+  weights.forEach((w, i) => {
+    const d = document.createElement('div');
+    d.className = 'weight-row';
+    d.innerHTML = `
+      <input type="text" value="${esc(w.type)}" placeholder="Visit type"
+        oninput="weights[${i}].type=this.value;scheduleWeightSave();calcReport()" style="font-size:13px">
+      <input type="number" value="${esc(w.weight)}" placeholder="TBD" step="0.01" min="0"
+        oninput="weights[${i}].weight=this.value;scheduleWeightSave();calcReport()" style="font-size:13px">
+      <input type="text" value="${esc(w.notes)}" placeholder="Notes" class="notes-field"
+        oninput="weights[${i}].notes=this.value;scheduleWeightSave()" style="font-size:13px">
+      <button class="btn btn-sm btn-danger" onclick="removeWeight(${i})" aria-label="Remove">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>`;
+    c.appendChild(d);
+  });
+}
+
+function addWeightRow() {
+  weights.push({ type:'', weight:'', notes:'' });
+  renderWeightRows(); scheduleWeightSave();
+}
+function removeWeight(i) {
+  weights.splice(i, 1); renderWeightRows(); scheduleWeightSave(); calcReport();
+}
+function scheduleWeightSave() { scheduleSave(saveWeights); }
+async function saveWeights() {
+  await sheetsClear(TABS.weights, 'A2:C100');
+  const header = [['type','weight','notes']];
+  const rows   = weights.map(w => [w.type, w.weight, w.notes]);
+  await sheetsUpdate(TABS.weights, 'A1:C1', header);
+  if (rows.length) await sheetsUpdate(TABS.weights, `A2:C${rows.length+1}`, rows);
+}
+async function resetWeights() {
+  if (!confirm('Reset all RVU weights to defaults?')) return;
+  weights = defaultWeights.map(w => ({...w}));
+  renderWeightRows(); await saveWeights(); calcReport(); setSynced();
+}
+
+/* ══════════════════════════════════════════
+   COMPENSATION
+══════════════════════════════════════════ */
+function saveComp() { scheduleSave(saveCompToSheet); }
+async function saveCompToSheet() {
+  const rows = [
+    ['field','value'],
+    ['base_pay',    document.getElementById('base-pay').value],
+    ['conv_factor', document.getElementById('conv-factor').value],
+    ['rvu_thresh',  document.getElementById('rvu-thresh').value],
+  ];
+  await sheetsUpdate(TABS.comp, `A1:B${rows.length}`, rows);
+}
+async function resetComp() {
+  if (!confirm('Clear compensation config?')) return;
+  document.getElementById('base-pay').value    = '';
+  document.getElementById('conv-factor').value = '';
+  document.getElementById('rvu-thresh').value  = '';
+  await saveCompToSheet(); calcReport(); setSynced();
+}
+
+/* ══════════════════════════════════════════
+   PROVIDER META
+══════════════════════════════════════════ */
+function autoSaveProvider() { scheduleSave(saveMetaToSheet); }
+async function saveMetaToSheet() {
+  const rows = [
+    ['field','value'],
+    ['provider_name', document.getElementById('prov-name').value],
+    ['period_start',  document.getElementById('period-start').value],
+    ['period_mode',   document.getElementById('period-mode').value],
+  ];
+  await sheetsUpdate(TABS.meta, `A1:B${rows.length}`, rows);
+}
+
+/* ══════════════════════════════════════════
+   ACTIVITY LOG
+══════════════════════════════════════════ */
+function renderLog() {
+  const c = document.getElementById('log-rows');
+  c.innerHTML = '';
+  if (!logEntries.length) {
+    c.innerHTML = '<p class="empty">No entries yet. Click "Add entry" to start logging.</p>';
+    return;
+  }
+  logEntries.forEach((e, i) => {
+    const d = document.createElement('div');
+    d.className = 'log-row';
+    d.innerHTML = `
+      <input type="date" value="${esc(e.date)}"
+        oninput="logEntries[${i}].date=this.value;scheduleLogSave();calcReport()" style="font-size:13px">
+      <select oninput="logEntries[${i}].type=this.value;scheduleLogSave();calcReport()" style="font-size:13px">
+        ${getTypeOptions(e.type)}
+      </select>
+      <input type="number" value="${esc(e.count)}" min="0" placeholder="0"
+        oninput="logEntries[${i}].count=this.value;scheduleLogSave();calcReport()" style="font-size:13px">
+      <input type="text" value="${esc(e.notes)}" placeholder="Notes" class="notes-cell"
+        oninput="logEntries[${i}].notes=this.value;scheduleLogSave()" style="font-size:13px">
+      <button class="btn btn-sm btn-danger" onclick="removeLog(${i})" aria-label="Remove">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>`;
+    c.appendChild(d);
+  });
+}
+
+function getTypeOptions(sel) {
+  return weights.filter(w => w.type).map(w =>
+    `<option value="${esc(w.type)}"${w.type===sel?' selected':''}>${esc(w.type)}</option>`
+  ).join('');
+}
+
+function addLogRow() {
+  logEntries.push({ id: Date.now().toString(), date:'', type: weights[0]?.type||'', count:'', notes:'' });
+  renderLog(); scheduleLogSave();
+}
+function removeLog(i) {
+  logEntries.splice(i, 1); renderLog(); scheduleLogSave(); calcReport();
+}
+function scheduleLogSave() { scheduleSave(saveLogToSheet); }
+async function saveLogToSheet() {
+  await sheetsClear(TABS.log, 'A2:E1000');
+  const header = [['id','date','type','count','notes']];
+  await sheetsUpdate(TABS.log, 'A1:E1', header);
+  const rows = logEntries.map(e => [e.id||'', e.date||'', e.type||'', e.count||'', e.notes||'']);
+  if (rows.length) await sheetsUpdate(TABS.log, `A2:E${rows.length+1}`, rows);
+}
+async function clearLog() {
+  if (!confirm('Clear all activity log entries?')) return;
+  logEntries = []; renderLog(); await saveLogToSheet(); calcReport(); setSynced();
+}
+
+/* ══════════════════════════════════════════
+   REPORT CALCULATION
+══════════════════════════════════════════ */
+function periodFraction() {
+  const m = document.getElementById('period-mode').value;
+  if (m === '6month')  return 0.5;
+  if (m === 'monthly') return 1/12;
+  return 1/52;
+}
+
+function calcReport() {
+  const warns = [];
+  const wMap  = {};
+  const missingW = [];
+
+  weights.forEach(w => {
+    if (!w.type) return;
+    const v = parseFloat(w.weight);
+    if (w.weight === '' || isNaN(v)) missingW.push(w.type);
+    else wMap[w.type] = v;
+  });
+  if (missingW.length) warns.push(`RVU weights not yet set for: ${missingW.join(', ')}`);
+
+  const basePay = parseFloat(document.getElementById('base-pay').value) || 0;
+  const conv    = parseFloat(document.getElementById('conv-factor').value) || 0;
+  const thresh  = parseFloat(document.getElementById('rvu-thresh').value) || 0;
+  if (!basePay) warns.push('Annual base pay not entered');
+  if (!conv)    warns.push('Conversion factor ($/RVU) not entered');
+
+  const frac       = periodFraction();
+  const periodBase = basePay * frac;
+
+  // Aggregate by type
+  const typeTotals = {};
+  logEntries.forEach(e => {
+    if (!e.type || !e.count) return;
+    typeTotals[e.type] = (typeTotals[e.type] || 0) + parseFloat(e.count || 0);
+  });
+
+  let totalRVUs     = 0;
+  let hasAllWeights = true;
+  const rows        = [];
+
+  Object.keys(typeTotals).forEach(t => {
+    const count = typeTotals[t];
+    const w     = wMap[t];
+    const hasW  = w !== undefined;
+    if (!hasW) hasAllWeights = false;
+    const rvus = hasW ? count * w : null;
+    if (rvus !== null) totalRVUs += rvus;
+    rows.push({ type: t, count, weight: hasW ? w : null, rvus });
+  });
+
+  const threshPeriod = thresh * frac;
+  const bonusRVUs    = (hasAllWeights && conv && thresh) ? Math.max(0, totalRVUs - threshPeriod) : null;
+  const bonus        = bonusRVUs !== null ? bonusRVUs * conv : null;
+  const totalComp    = (bonus !== null && basePay) ? periodBase + bonus : null;
+
+  // Metrics
+  document.getElementById('m-entries').textContent = logEntries.length || '—';
+  document.getElementById('m-rvus').textContent    = (hasAllWeights && logEntries.length) ? totalRVUs.toFixed(1) : '—';
+  document.getElementById('m-base').textContent    = basePay ? '$' + Math.round(periodBase).toLocaleString() : '—';
+  document.getElementById('m-total').textContent   = totalComp !== null ? '$' + Math.round(totalComp).toLocaleString() : '—';
+
+  // Summary table
+  const tbody = document.getElementById('summary-tbody');
+  tbody.innerHTML = '';
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--hint);font-size:13px;padding:1.5rem 0">No activity logged yet</td></tr>`;
+  }
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${esc(r.type)}</td>
+      <td>${r.count}</td>
+      <td>${r.weight !== null ? r.weight : '<span style="color:var(--hint)">TBD</span>'}</td>
+      <td>${r.rvus !== null ? r.rvus.toFixed(1) : '<span style="color:var(--hint)">—</span>'}</td>
+      <td>${r.weight !== null
+        ? '<span class="badge badge-ok">Ready</span>'
+        : '<span class="badge badge-warn">Weight missing</span>'}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Warnings
+  const wb = document.getElementById('warnings-block');
+  wb.innerHTML = warns.map(w =>
+    `<div class="alert alert-warn" style="margin-bottom:8px">
+       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+       ${esc(w)}
+     </div>`
+  ).join('');
+  wb.style.marginBottom = warns.length ? '1rem' : '0';
+
+  renderCompChart(periodBase, bonus || 0, totalComp || 0);
+}
+
+/* ══════════════════════════════════════════
+   CHARTS
+══════════════════════════════════════════ */
+function isDark() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
+
+function renderCompChart(base, bonus, total) {
+  if (compChart) { compChart.destroy(); compChart = null; }
+  const canvas = document.getElementById('compChart');
+  const dark   = isDark();
+  const gridC  = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textC  = dark ? '#a0a09a' : '#6b6b66';
+  const fmt    = v => '$' + Math.round(v).toLocaleString();
+
+  if (chartMode === 'grouped') {
+    compChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: ['Base pay', 'RVU bonus', 'Total comp'],
+        datasets: [{
+          label: 'Amount',
+          data: [Math.round(base), Math.round(bonus), Math.round(total)],
+          backgroundColor: ['#B5D4F4', '#1D9E75', '#185FA5'],
+          borderRadius: 5, borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw) } } },
+        scales: {
+          y: { ticks: { callback: fmt, color: textC }, grid: { color: gridC }, border: { display: false } },
+          x: { ticks: { color: textC }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+  } else {
+    const name = document.getElementById('prov-name').value || 'Provider';
+    compChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: [name],
+        datasets: [
+          { label: 'Base pay',  data: [Math.round(base)],  backgroundColor: '#B5D4F4', borderRadius: 0, borderSkipped: false },
+          { label: 'RVU bonus', data: [Math.round(bonus)], backgroundColor: '#1D9E75', borderRadius: 5, borderSkipped: 'bottom' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw) } } },
+        scales: {
+          x: { stacked: true, ticks: { color: textC }, grid: { display: false }, border: { display: false } },
+          y: { stacked: true, ticks: { callback: fmt, color: textC }, grid: { color: gridC }, border: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+function switchChart(mode) {
+  chartMode = mode;
+  document.getElementById('tab-grouped').className = 'tab' + (mode === 'grouped' ? ' active' : '');
+  document.getElementById('tab-stacked').className = 'tab' + (mode === 'stacked' ? ' active' : '');
+  calcReport();
+}
+
+function renderCmpChart() {
+  if (cmpChart) { cmpChart.destroy(); cmpChart = null; }
+  const sel   = snapshots.filter(s => s.selected);
+  if (sel.length < 2) return;
+  const dark  = isDark();
+  const gridC = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textC = dark ? '#a0a09a' : '#6b6b66';
+  const fmt   = v => '$' + Math.round(v).toLocaleString();
+  const labels = sel.map(s => s.label.length > 24 ? s.label.substring(0, 24) + '…' : s.label);
+
+  cmpChart = new Chart(document.getElementById('cmpChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Base pay',  data: sel.map(s => s.base),  backgroundColor: '#B5D4F4', borderRadius: 0, borderSkipped: false },
+        { label: 'RVU bonus', data: sel.map(s => s.bonus), backgroundColor: '#1D9E75', borderRadius: 5, borderSkipped: 'bottom' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw) } } },
+      scales: {
+        x: { stacked: true, ticks: { color: textC }, grid: { display: false }, border: { display: false } },
+        y: { stacked: true, ticks: { callback: fmt, color: textC }, grid: { color: gridC }, border: { display: false } }
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════
+   SNAPSHOTS
+══════════════════════════════════════════ */
+async function saveSnapshot() {
+  const name   = document.getElementById('prov-name').value || 'Provider';
+  const start  = document.getElementById('period-start').value || '';
+  const modeMap = { '6month':'6-month', 'monthly':'Monthly', 'weekly':'Weekly' };
+  const mode   = modeMap[document.getElementById('period-mode').value] || '';
+  const label  = `${name} — ${start} (${mode})`;
+
+  const basePay = parseFloat(document.getElementById('base-pay').value) || 0;
+  const conv    = parseFloat(document.getElementById('conv-factor').value) || 0;
+  const thresh  = parseFloat(document.getElementById('rvu-thresh').value) || 0;
+  const frac    = periodFraction();
+  const periodBase = basePay * frac;
+  const wMap = {};
+  weights.forEach(w => { if (w.type && w.weight !== '') wMap[w.type] = parseFloat(w.weight); });
+  const typeTotals = {};
+  logEntries.forEach(e => { if (e.type && e.count) typeTotals[e.type] = (typeTotals[e.type]||0) + parseFloat(e.count||0); });
+  let totalRVUs = 0;
+  Object.keys(typeTotals).forEach(t => { if (wMap[t]) totalRVUs += typeTotals[t] * wMap[t]; });
+  const bonusRVUs = Math.max(0, totalRVUs - thresh * frac);
+  const bonus = conv ? bonusRVUs * conv : 0;
+  const snap = {
+    id:    Date.now().toString(),
+    label,
+    base:  Math.round(periodBase),
+    bonus: Math.round(bonus),
+    total: Math.round(periodBase + bonus),
+    rvus:  Math.round(totalRVUs * 10) / 10,
+    selected: false
+  };
+  snapshots.push(snap);
+  try {
+    setSyncing();
+    await saveSnapshotsToSheet();
+    setSynced();
+  } catch(e) { setSyncError('Save failed'); }
+  renderSnapshots();
+}
+
+async function saveSnapshotsToSheet() {
+  await sheetsClear(TABS.snaps, 'A2:G500');
+  const header = [['id','label','base','bonus','total','rvus','selected']];
+  await sheetsUpdate(TABS.snaps, 'A1:G1', header);
+  const rows = snapshots.map(s => [s.id, s.label, s.base, s.bonus, s.total, s.rvus, '']);
+  if (rows.length) await sheetsUpdate(TABS.snaps, `A2:G${rows.length+1}`, rows);
+}
+
+async function deleteSnap(i) {
+  if (!confirm('Delete this snapshot?')) return;
+  snapshots.splice(i, 1);
+  try { setSyncing(); await saveSnapshotsToSheet(); setSynced(); } catch(e) { setSyncError('Save failed'); }
+  renderSnapshots(); renderCmpChart();
+}
+
+function renderSnapshots() {
+  const c = document.getElementById('snapshots-list');
+  if (!snapshots.length) {
+    c.innerHTML = '<p class="empty">No snapshots yet. Run a report and click "Save snapshot."</p>';
+    return;
+  }
+  c.innerHTML = '';
+  snapshots.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'snap-card' + (s.selected ? ' selected' : '');
+    d.onclick = (e) => {
+      if (e.target.closest('button')) return;
+      snapshots[i].selected = !snapshots[i].selected;
+      renderSnapshots(); renderCmpChart();
+    };
+    d.innerHTML = `
+      <div>
+        <div class="snap-name">${esc(s.label)}</div>
+        <div class="snap-meta">RVUs: ${s.rvus} &nbsp;·&nbsp; Base: $${s.base.toLocaleString()} &nbsp;·&nbsp; Bonus: $${s.bonus.toLocaleString()} &nbsp;·&nbsp; Total: $${s.total.toLocaleString()}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteSnap(${i})" aria-label="Delete snapshot">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>`;
+    c.appendChild(d);
+  });
+}
+
+/* ══════════════════════════════════════════
+   EXPORT
+══════════════════════════════════════════ */
+function exportCSV() {
+  const name  = document.getElementById('prov-name').value || 'provider';
+  const start = document.getElementById('period-start').value || '';
+  const mode  = document.getElementById('period-mode').value;
+  const rows  = [
+    ['RVU Productivity Report'],
+    ['Provider', name],
+    ['Period start', start],
+    ['Mode', mode],
+    ['Generated', new Date().toLocaleDateString()],
+    [],
+    ['Visit type', 'Count', 'RVU weight', 'Total RVUs'],
+  ];
+  const wMap = {};
+  weights.forEach(w => { if (w.type && w.weight !== '') wMap[w.type] = parseFloat(w.weight); });
+  const typeTotals = {};
+  logEntries.forEach(e => { if (e.type && e.count) typeTotals[e.type] = (typeTotals[e.type]||0) + parseFloat(e.count||0); });
+  Object.keys(typeTotals).forEach(t => {
+    const w = wMap[t];
+    rows.push([t, typeTotals[t], w !== undefined ? w : 'TBD', w !== undefined ? (typeTotals[t]*w).toFixed(1) : 'pending']);
+  });
+  rows.push([], ['Base pay (period)', document.getElementById('m-base').textContent], ['Total RVUs', document.getElementById('m-rvus').textContent], ['Total estimated comp', document.getElementById('m-total').textContent]);
+  dl(rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n'), `${name}_rvu_report.csv`);
+}
+
+function exportComparison() {
+  const sel = snapshots.filter(s => s.selected);
+  if (!sel.length) { alert('Select at least one snapshot to export.'); return; }
+  const rows = [['Label','Total RVUs','Base pay','RVU bonus','Total comp'], ...sel.map(s => [s.label, s.rvus, s.base, s.bonus, s.total])];
+  dl(rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n'), 'rvu_comparison.csv');
+}
+
+function dl(csv, filename) {
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = filename; a.click();
+}
+
+/* ══════════════════════════════════════════
+   UTILITY
+══════════════════════════════════════════ */
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
