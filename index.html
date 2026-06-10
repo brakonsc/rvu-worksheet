@@ -423,15 +423,22 @@ function periodFraction() {
   return m==='6month'?0.5:m==='monthly'?1/12:1/52;
 }
 
+// Normalize type strings for matching — lowercase + trimmed
+function norm(s){ return String(s||'').trim().toLowerCase(); }
+
 function calcReport() {
   const warns  = [];
+  // wMap keyed by normalized type for resilient matching
+  // wLabel maps normalized key back to display label
   const wMap   = {};
+  const wLabel = {};
   const missing= [];
   weights.forEach(w => {
     if (!w.type) return;
-    const v = parseFloat(w.weight);
-    if (w.weight===''||isNaN(v)) missing.push(w.type);
-    else wMap[w.type] = v;
+    const key = norm(w.type);
+    const v   = parseFloat(w.weight);
+    if (w.weight===''||isNaN(v)) { missing.push(w.type.trim()); }
+    else { wMap[key]=v; wLabel[key]=w.type.trim(); }
   });
   if (missing.length) warns.push(`RVU weights not yet set for: ${missing.join(', ')}`);
 
@@ -444,20 +451,28 @@ function calcReport() {
   const frac       = periodFraction();
   const periodBase = basePay * frac;
 
-  const typeTotals = {};
+  // Aggregate log entries using normalized keys
+  const typeTotals  = {}; // norm key → count
+  const typeDisplay = {}; // norm key → display label (from log entry)
   logEntries.forEach(e => {
     if (!e.type||!e.count) return;
-    typeTotals[e.type] = (typeTotals[e.type]||0) + parseFloat(e.count||0);
+    const key = norm(e.type);
+    typeTotals[key]  = (typeTotals[key]||0) + parseFloat(e.count||0);
+    typeDisplay[key] = e.type.trim();
   });
 
   let totalRVUs=0, hasAll=true;
   const rows=[];
-  Object.keys(typeTotals).forEach(t => {
-    const count=typeTotals[t], w=wMap[t], hasW=w!==undefined;
+  Object.keys(typeTotals).forEach(key => {
+    const count  = typeTotals[key];
+    const w      = wMap[key];
+    const hasW   = w !== undefined;
+    // Use weight config label if available, else log label
+    const label  = wLabel[key] || typeDisplay[key];
     if (!hasW) hasAll=false;
-    const rvus=hasW?count*w:null;
+    const rvus   = hasW ? count*w : null;
     if (rvus!==null) totalRVUs+=rvus;
-    rows.push({type:t,count,weight:hasW?w:null,rvus});
+    rows.push({type:label, count, weight:hasW?w:null, rvus});
   });
 
   const bonusRVUs = (hasAll&&conv&&thresh)?Math.max(0,totalRVUs-thresh*frac):null;
@@ -578,9 +593,9 @@ function saveSnapshot() {
   const conv  = parseFloat(document.getElementById('conv-factor').value)||0;
   const thresh= parseFloat(document.getElementById('rvu-thresh').value)||0;
   const wMap  = {};
-  weights.forEach(w=>{ if(w.type&&w.weight!=='') wMap[w.type]=parseFloat(w.weight); });
+  weights.forEach(w=>{ if(w.type&&w.weight!=='') wMap[norm(w.type)]=parseFloat(w.weight); });
   const tots  = {};
-  logEntries.forEach(e=>{ if(e.type&&e.count) tots[e.type]=(tots[e.type]||0)+parseFloat(e.count||0); });
+  logEntries.forEach(e=>{ if(e.type&&e.count) tots[norm(e.type)]=(tots[norm(e.type)]||0)+parseFloat(e.count||0); });
   let totalRVUs=0;
   Object.keys(tots).forEach(t=>{ if(wMap[t]) totalRVUs+=tots[t]*wMap[t]; });
   const bonusRVUs=Math.max(0,totalRVUs-thresh*frac);
@@ -622,15 +637,16 @@ function exportCSV() {
   const name  = document.getElementById('prov-name').value||'provider';
   const start = document.getElementById('period-start').value||'';
   const mode  = document.getElementById('period-mode').value;
-  const wMap  = {};
-  weights.forEach(w=>{ if(w.type&&w.weight!=='') wMap[w.type]=parseFloat(w.weight); });
-  const tots  = {};
-  logEntries.forEach(e=>{ if(e.type&&e.count) tots[e.type]=(tots[e.type]||0)+parseFloat(e.count||0); });
+  const wMap     = {};
+  const wLabelEx = {};
+  weights.forEach(w=>{ if(w.type&&w.weight!==''){const k=norm(w.type); wMap[k]=parseFloat(w.weight); wLabelEx[k]=w.type.trim();} });
+  const tots     = {};
+  logEntries.forEach(e=>{ if(e.type&&e.count) tots[norm(e.type)]=(tots[norm(e.type)]||0)+parseFloat(e.count||0); });
   const rows=[
     ['RVU Productivity Report'],['Provider',name],['Period start',start],['Mode',mode],
     ['Generated',new Date().toLocaleDateString()],[],
     ['Visit type','Count','RVU weight','Total RVUs'],
-    ...Object.keys(tots).map(t=>{const w=wMap[t];return[t,tots[t],w!==undefined?w:'TBD',w!==undefined?(tots[t]*w).toFixed(1):'pending'];}),
+    ...Object.keys(tots).map(t=>{ const w=wMap[t]; const label=wLabelEx[t]||t; return[label,tots[t],w!==undefined?w:'TBD',w!==undefined?(tots[t]*w).toFixed(1):'pending']; }),
     [],
     ['Base pay (period)', document.getElementById('m-base').textContent],
     ['Total RVUs',        document.getElementById('m-rvus').textContent],
