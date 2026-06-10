@@ -475,11 +475,12 @@ function calcReport() {
     rows.push({type:label, count, weight:hasW?w:null, rvus});
   });
 
-  const bonusRVUs  = (hasAll&&conv&&thresh)?Math.max(0,totalRVUs-thresh*frac):null;
-  const bonus      = bonusRVUs!==null?bonusRVUs*conv:null;
-  const totalComp  = (bonus!==null&&basePay)?periodBase+bonus:null;
+  // thresh=0 is valid (bonus on every RVU), so only require hasAll + conv
+  const bonusRVUs  = (hasAll&&conv) ? Math.max(0, totalRVUs - thresh*frac) : null;
+  const bonus      = bonusRVUs!==null ? bonusRVUs*conv : null;
+  const totalComp  = (bonus!==null&&basePay) ? periodBase+bonus : null;
 
-  // Chart always renders with best available data — doesn't wait for full config
+  // Chart renders with best available data at all times
   const chartBase  = basePay ? periodBase : 0;
   const chartBonus = bonus!==null ? bonus : 0;
   const chartTotal = totalComp!==null ? totalComp : chartBase+chartBonus;
@@ -487,7 +488,7 @@ function calcReport() {
   document.getElementById('m-entries').textContent = logEntries.length||'—';
   document.getElementById('m-rvus').textContent    = (hasAll&&logEntries.length)?totalRVUs.toFixed(1):'—';
   document.getElementById('m-base').textContent    = basePay?'$'+Math.round(periodBase).toLocaleString():'—';
-  document.getElementById('m-total').textContent   = totalComp!==null?'$'+Math.round(totalComp).toLocaleString():'—';
+  document.getElementById('m-total').textContent   = chartTotal>0?'$'+Math.round(chartTotal).toLocaleString():'—';
 
   const tbody = document.getElementById('summary-tbody');
   tbody.innerHTML = '';
