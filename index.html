@@ -475,9 +475,14 @@ function calcReport() {
     rows.push({type:label, count, weight:hasW?w:null, rvus});
   });
 
-  const bonusRVUs = (hasAll&&conv&&thresh)?Math.max(0,totalRVUs-thresh*frac):null;
-  const bonus     = bonusRVUs!==null?bonusRVUs*conv:null;
-  const totalComp = (bonus!==null&&basePay)?periodBase+bonus:null;
+  const bonusRVUs  = (hasAll&&conv&&thresh)?Math.max(0,totalRVUs-thresh*frac):null;
+  const bonus      = bonusRVUs!==null?bonusRVUs*conv:null;
+  const totalComp  = (bonus!==null&&basePay)?periodBase+bonus:null;
+
+  // Chart always renders with best available data — doesn't wait for full config
+  const chartBase  = basePay ? periodBase : 0;
+  const chartBonus = bonus!==null ? bonus : 0;
+  const chartTotal = totalComp!==null ? totalComp : chartBase+chartBonus;
 
   document.getElementById('m-entries').textContent = logEntries.length||'—';
   document.getElementById('m-rvus').textContent    = (hasAll&&logEntries.length)?totalRVUs.toFixed(1):'—';
@@ -510,7 +515,7 @@ function calcReport() {
     </div>`).join('');
   wb.style.marginBottom = warns.length?'1rem':'0';
 
-  renderCompChart(periodBase, bonus||0, totalComp||0);
+  renderCompChart(chartBase, chartBonus, chartTotal);
 }
 
 /* ── Charts ── */
